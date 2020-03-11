@@ -24,7 +24,7 @@ Here, `name` sets the name of the output library. In Linux, this creates a `libC
 
 
 ## Running
-There's a `test.py` file that invokes the Rust methods. For example:
+There's a [`example_usage.py`](example_usage.py) file that invokes the Rust methods. For example:
 
 ```
 from CheeseShop import *

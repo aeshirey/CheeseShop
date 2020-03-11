@@ -59,7 +59,7 @@ impl CheeseShop {
     fn has_cheese(&self, name: Option<&str>) -> bool {
         match name {
             Some(s) => println!("We have no {}", s),
-            None => println!("No chesee whatsoever."),
+            None => println!("No cheese whatsoever."),
         }
         false
     }
