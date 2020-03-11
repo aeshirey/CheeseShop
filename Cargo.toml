@@ -1,0 +1,14 @@
+[package]
+name = "CheeseShop"
+version = "0.1.0"
+authors = ["adam"]
+edition = "2018"
+
+[lib]
+name = "CheeseShop"
+crate-type = ["cdylib"]
+
+
+[dependencies.pyo3]
+version = "0.9.0-alpha.1"
+features = ["extension-module"]
