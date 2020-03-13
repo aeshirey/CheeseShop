@@ -46,3 +46,31 @@ assert not cs.has_cheese() # prints "No cheese whatsoever."
 # Run the front of the shop
 print(cs.respond_to_client("camembert")) # "Oh! The cat's eaten it.cheddar"
 print(cs.respond_to_client("some cheese whose name I just made up")) # "No"
+
+
+
+# Let's have an argument. Default bool values
+assert are_we_arguing() == '''Yes, but it isn't just saying "No, it isn't."'''
+assert are_we_arguing(False) == '''Yes, but it isn't just saying "No, it isn't."'''
+assert are_we_arguing(True) == "If I argue with you, I must take up a contrary position!"
+# And default string values
+assert ive_told_you_once() == "Yes I have."
+assert ive_told_you_once("No you haven't.") == "Yes I have."
+assert ive_told_you_once("When?") == "Just now."
+
+# Keyword arguments
+print("No knights at Camelot:")
+knights_at_camelot()
+
+print("Arthur's closest knights:")
+knights_at_camelot(Bedevere='Wise', Lancelot='Brave', Galahad='Pure', Robin='Not Quite so Brave as Sir Lancelot') 
+
+# *args
+things_that_float("Bread", "Apples", "Very small rocks", "Cider")
+things_that_float("Great gravy", "Churches", "Lead")
+things_that_float("A duck")
+
+# Passing a callable object
+make_the_call(lambda: "Bloody vikings") # prints "Got a string value: 'Bloody vikings'"
+make_the_call(lambda: 42) # prints "Got an integral value: 42"
+make_the_call(lambda: 1.618) # prints "Got a real value: 1.618"
