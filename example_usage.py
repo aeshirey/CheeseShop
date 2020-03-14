@@ -70,7 +70,18 @@ things_that_float("Bread", "Apples", "Very small rocks", "Cider")
 things_that_float("Great gravy", "Churches", "Lead")
 things_that_float("A duck")
 
-# Passing a callable object
+# Passing a callable object (that accepts no arguments!)
 make_the_call(lambda: "Bloody vikings") # prints "Got a string value: 'Bloody vikings'"
 make_the_call(lambda: 42) # prints "Got an integral value: 42"
 make_the_call(lambda: 1.618) # prints "Got a real value: 1.618"
+
+# Passing a callable object that expects arguments
+def product_is_even(i, j):
+   if i == 4 and j == 5: return "The Spanish Inquisition!" # this will raise a ValueError and stop further processing within call_with_args
+   return (i * j) % 2 == 0
+
+def pow_less_than_20(i, j):
+   return (i ** j) < 20
+
+call_with_args(product_is_even, 5, 6)
+call_with_args(pow_less_than_20, 5, 6)

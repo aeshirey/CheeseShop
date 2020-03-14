@@ -6,6 +6,20 @@ use pyo3::Python;
 mod cheese_shop;
 use cheese_shop::CheeseShop;
 
+/*
+A few comments before we get started:
+ * Use #[text_signature(foo, bar)] to present the function signature to Python.
+   It must go after #[pyfunction], and there are limitations on characters that can go in.
+ * /// comments will show up in the Python help() for methods.
+ *
+
+Some TODO items:
+ * Add some details on downcast_ref (soon to be downcast)
+ * Understand how memory is handled when passing objects back and forth.
+ * Document all of the 'dunder' methods currently available, create a good example of them.
+ * Figure out how to wrap_pyfunction!() a function defined in another module. (This currently fails.)
+ */
+
 #[pyfunction]
 /// Does something completely different by returning a Python `List[str]`.
 fn do_something() -> Vec<&'static str> {
@@ -38,8 +52,6 @@ fn movies() -> Vec<(String, u16)> {
 //
 // So for now, I'm mashing all these functions into this file.
 //
-// A few comments:
-//  * Use #[text_signature(foo, bar)] to present the function signature to Python.
 
 /// Accepts an optional bool argument. Current implementation throws a TypeError if a non-bool is
 /// passed.
@@ -141,6 +153,48 @@ fn make_the_call(py: Python, pyfunc: PyObject) -> PyResult<()> {
     Ok(())
 }
 
+/// This is markedly less silly than other examples.
+/// Pass a function from Python to Rust, then have Rust call the Python function.
+///
+/// Rust expects `callable` to take two numeric arguments and return a bool. Rust will invoke
+/// `callable` for all (i,j) pairs for i from 1..max_i and j from i..max_j. If your function
+/// returns true, Rust will write a line.
+#[pyfunction]
+#[text_signature = "(callable, max_i, max_j)"]
+fn call_with_args(py: Python, pyfunc: PyObject, max_i: u8, max_j: u8) -> PyResult<()> {
+    for i in 1..max_i {
+        for j in i..max_j {
+            let args = (i, j);
+            let py_result: PyObject = pyfunc.call1(py, args)?;
+            if let Ok(boolval) = py_result.extract::<bool>(py) {
+                if boolval {
+                    println!("func({}, {}) is true", i, j);
+                }
+            } else {
+                return Err(pyo3::exceptions::ValueError::py_err("func({}, {}) didn't return a bool!"));
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Pass a function to Rust and it will call you back with the tuple ("bicycle", "repair", "man").
+/// Whatever you return will be printed to the console.
+#[pyfunction]
+#[text_signature = "(callable)"]
+fn call_with_tuple_arg(py: Python, pyfunc: PyObject) -> PyResult<()> {
+    let arg_tuple = ("bicycle", "repair", "man");
+    let py_result : PyObject = pyfunc.call1(py, (arg_tuple,))?;
+    if let Ok(strval) = py_result.extract::<String>(py) {
+        println!("Your function returned the string '{}'", strval);
+    } else {
+        println!("Your function returned some non-string value");
+    }
+    Ok(())
+}
+
+
 /// This module is a python module implemented in Rust.
 #[pymodule]
 #[allow(non_snake_case)]
@@ -158,6 +212,8 @@ fn CheeseShop(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(knights_at_camelot))?;
     m.add_wrapped(wrap_pyfunction!(things_that_float))?;
     m.add_wrapped(wrap_pyfunction!(make_the_call))?;
+    m.add_wrapped(wrap_pyfunction!(call_with_args))?;
+    m.add_wrapped(wrap_pyfunction!(call_with_tuple_arg))?;
 
     Ok(())
 }
