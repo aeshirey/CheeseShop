@@ -6,6 +6,9 @@ use pyo3::Python;
 mod cheese_shop;
 use cheese_shop::CheeseShop;
 
+mod self_defense;
+use self_defense::{Instructor, Student};
+
 /*
 A few comments before we get started:
  * Use #[text_signature(foo, bar)] to present the function signature to Python.
@@ -171,7 +174,9 @@ fn call_with_args(py: Python, pyfunc: PyObject, max_i: u8, max_j: u8) -> PyResul
                     println!("func({}, {}) is true", i, j);
                 }
             } else {
-                return Err(pyo3::exceptions::ValueError::py_err("func({}, {}) didn't return a bool!"));
+                return Err(pyo3::exceptions::ValueError::py_err(
+                    "func({}, {}) didn't return a bool!",
+                ));
             }
         }
     }
@@ -185,7 +190,7 @@ fn call_with_args(py: Python, pyfunc: PyObject, max_i: u8, max_j: u8) -> PyResul
 #[text_signature = "(callable)"]
 fn call_with_tuple_arg(py: Python, pyfunc: PyObject) -> PyResult<()> {
     let arg_tuple = ("bicycle", "repair", "man");
-    let py_result : PyObject = pyfunc.call1(py, (arg_tuple,))?;
+    let py_result: PyObject = pyfunc.call1(py, (arg_tuple,))?;
     if let Ok(strval) = py_result.extract::<String>(py) {
         println!("Your function returned the string '{}'", strval);
     } else {
@@ -193,7 +198,6 @@ fn call_with_tuple_arg(py: Python, pyfunc: PyObject) -> PyResult<()> {
     }
     Ok(())
 }
-
 
 /// This module is a python module implemented in Rust.
 #[pymodule]
@@ -215,5 +219,8 @@ fn CheeseShop(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(call_with_args))?;
     m.add_wrapped(wrap_pyfunction!(call_with_tuple_arg))?;
 
+    // For passing objects back and forth
+    m.add_class::<Instructor>()?;
+    m.add_class::<Student>()?;
     Ok(())
 }
