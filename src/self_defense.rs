@@ -24,7 +24,8 @@ impl Instructor {
     }
 
     pub fn defend(&self, student_obj: &PyAny) -> PyResult<()> {
-        let student: &Student = student_obj.extract()?;
+        // See https://github.com/PyO3/pyo3/blob/master/guide/src/class.md for info on this
+        let student: PyRef<Student> = student_obj.extract()?;
 
         // first, the student attacks
         student.attack();
@@ -51,17 +52,6 @@ pub struct Student {
     // "Raspberry", -- Mr Thompson/Tinned Peach; 16 ton weight
     // "Basket of Raspberries" -- Remaining students; tiger
     weapon: String,
-}
-
-impl pyo3::FromPyObject<'_> for Student {
-    fn extract(any: &PyAny) -> PyResult<Self> {
-        // If Self derived Copy, Clone, we could just do the following:
-        //Ok(*any.downcast_ref::<Student>()?)
-        let student: &Student = any.downcast_ref::<Student>()?;
-        Ok(Student {
-            weapon: student.weapon.clone(),
-        })
-    }
 }
 
 /// dunder methods

@@ -7,7 +7,7 @@ Examples of using [PyO3 Rust bindings for Python](https://github.com/pyo3/pyo3) 
 * Create your library project: `$ cargo new --lib CheeseShop`
 * Then make sure your project is using nighly Rust: `$ rustup override set nightly`
 
-As of 2020-03-10, the `master` branch of PyO3 has changes that will likely break this code, which currently depends on the [0.9.0-alpha.1](https://github.com/PyO3/pyo3/releases/tag/v0.9.0-alpha.1) prerelease. Note also that nighly Rust can cause problems if you use this to build production code.
+Note that nighly Rust can cause problems if you use this to build production code.
 
 ## Cargo.toml
 
@@ -19,7 +19,7 @@ name = "CheeseShop"
 crate-type = ["cdylib"]
 
 [dependencies.pyo3]
-version = "0.9.0-alpha.1"
+version = "0.9.1"
 features = ["extension-module"]
 ```
 
@@ -28,6 +28,9 @@ Here, `name` sets the name of the output library. In Linux, this creates a `libC
 ## Writing Rust functions
 
 ```rust
+use pyo3::prelude::*;
+use pyo3::wrap_pyfunction;
+
 #[pyfunction]
 /// Does something completely different by returning a Python `List[str]`.
 fn do_something() -> Vec<&'static str> {
@@ -44,6 +47,12 @@ fn movies() -> Vec<(String, u16)> {
         ("Life of Brian".to_string(), 1979),
         ("The Meaning of Life".to_string(), 1983),
     ]
+}
+
+#[pymodule]
+fn CheeseShop(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_wrapped(wrap_pyfunction!(do_something))?;
+    m.add_wrapped(wrap_pyfunction!(movies))?;
 }
 ```
 

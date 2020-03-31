@@ -16,7 +16,6 @@ from CheeseShop import *
 
 
 
-
 # MODULE-LEVEL FUNCTIONS, not particularly interesting
 assert do_something() == ['And', 'now', 'for', 'something', 'completely', 'different']
 
@@ -83,5 +82,29 @@ def product_is_even(i, j):
 def pow_less_than_20(i, j):
    return (i ** j) < 20
 
-call_with_args(product_is_even, 5, 6)
+try:
+    print("Calling 'product_is_even(5, 6)':")
+    call_with_args(product_is_even, 5, 6)
+except ValueError as e:
+    print('Aborting due to ValueErrori: %s' % e)
+
+print("Calling 'pow_less_than_20(5, 6)':")
 call_with_args(pow_less_than_20, 5, 6)
+
+
+## DEFENSE AGAINST FRESH FRUIT
+# Code in self_defense.rs is intended to show how objects are passed between Rust and Python,
+# how to implement Python dunder methods, documentation, etc.
+# The actual Python code is very straightforward. First, we need a self-defense instructor
+instructor = Instructor()
+
+# And a student, who is wielding some type of fresh fruit
+harrison = Student('banana')
+thompson = Student('raspberry')
+student3 = Student('basket of raspberries')
+student4 = Student('pointed stick')
+
+# We define Student.attack(), but we'll instead invoke Instructor.defend(Student)
+# This will first print "Student attacks with a banana"
+# Then it prints "Instructor shoots Mr Apricot"
+instructor.defend(harrison)
