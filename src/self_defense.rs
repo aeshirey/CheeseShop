@@ -78,3 +78,19 @@ impl Student {
         println!("Student attacks with a {}", self.weapon);
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::*;
+    #[test]
+    fn test_weapon_name() {
+        let mr_apricot = Student::new("banana".to_string());
+
+        assert_eq!(mr_apricot.weapon, "banana".to_string());
+    }
+
+    #[test]
+    fn this_one_fails() {
+        assert_eq!(1, 2);
+    }
+}
