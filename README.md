@@ -2,12 +2,15 @@
 Examples of using [PyO3 Rust bindings for Python](https://github.com/pyo3/pyo3) with little to no silliness.
 
 ## Getting Started
+* Create your library project: `$ cargo new --lib CheeseShop`
+
+As of 0.11.1, PyO3 targets stable Rust, so nightly is no longer needed. If you're using an older version, you'll need to:
 
 * Make sure you have nightly Rust: `$ rustup install nightly`
-* Create your library project: `$ cargo new --lib CheeseShop`
 * Then make sure your project is using nighly Rust: `$ rustup override set nightly`
 
 Note that nighly Rust can cause problems if you use this to build production code.
+
 
 ## Cargo.toml
 
@@ -19,7 +22,7 @@ name = "CheeseShop"
 crate-type = ["cdylib"]
 
 [dependencies.pyo3]
-version = "0.9.1"
+version = "0.11.1"
 features = ["extension-module"]
 ```
 

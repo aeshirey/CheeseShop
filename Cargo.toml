@@ -1,6 +1,6 @@
 [package]
-name = "CheeseShop"
-version = "0.1.0"
+name = "cheese-shop"
+version = "0.2.0"
 authors = ["adam"]
 edition = "2018"
 
@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 
 [dependencies.pyo3]
-version = "0.9.1"
+version = "0.11.0"
 #features = ["extension-module"]
 extension-module = ["extension-module"]
 default = ["extension-module"]
