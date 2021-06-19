@@ -39,7 +39,7 @@ except ValueError as e:
 
 # What kinds of chesee do we have?
 assert not cs.has_cheese("cheddar") # prints "We have no cheddar"
-assert not cs.has_cheese("greek feta") # prints "We have no cheddar"
+assert not cs.has_cheese("greek feta") # prints "We have no greek feta"
 assert not cs.has_cheese() # prints "No cheese whatsoever."
 
 # Run the front of the shop
