@@ -1,7 +1,6 @@
-use pyo3::exceptions::ValueError;
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
-use pyo3::PyObject;
 
 #[pyclass]
 /// Sells cheesy comestibles.
@@ -39,7 +38,7 @@ impl pyo3::class::PyObjectProtocol for CheeseShop {
     fn __getattr__(&self, name: &str) -> PyResult<&'static str> {
         match name {
             "cannibalism" => Ok("Relatively under control"),
-            _ => Err(ValueError::py_err("Attribute not found. Move along.")),
+            _ => Err(PyValueError::new_err("Attribute not found. Move along.")),
         }
     }
 }
@@ -76,7 +75,6 @@ impl CheeseShop {
             "bel paese" | "stilton" => "Sorry.",
             "red windsor" => "Normally, sir, yes, but today the van broke down.",
             "camembert" => "Oh! The cat's eaten it.",
-
             _ => "No",
         };
 

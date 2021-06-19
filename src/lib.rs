@@ -88,7 +88,7 @@ fn ive_told_you_once(_py: Python, client_says: &str) -> PyResult<&'static str> {
         "You didn't!" => Ok("I did!"),
         "When?" => Ok("Just now."),
         "You most certainly did not!" => Ok("I most definitely told you!"),
-        _ => Err(pyo3::exceptions::ValueError::py_err(
+        _ => Err(pyo3::exceptions::PyValueError::new_err(
             "I'm not allowed to argue any more.",
         )),
     }
@@ -159,22 +159,22 @@ fn make_the_call(py: Python, pyfunc: PyObject) -> PyResult<()> {
 /// This is markedly less silly than other examples.
 /// Pass a function from Python to Rust, then have Rust call the Python function.
 ///
-/// Rust expects `callable` to take two numeric arguments and return a bool. Rust will invoke
+/// We expect `callable` to take two numeric arguments and return a bool. Rust will invoke
 /// `callable` for all (i,j) pairs for i from 1..max_i and j from i..max_j. If your function
 /// returns true, Rust will write a line.
 #[pyfunction]
 #[text_signature = "(callable, max_i, max_j)"]
-fn call_with_args(py: Python, pyfunc: PyObject, max_i: u8, max_j: u8) -> PyResult<()> {
+fn call_with_args(py: Python, callable: PyObject, max_i: u8, max_j: u8) -> PyResult<()> {
     for i in 1..max_i {
         for j in i..max_j {
             let args = (i, j);
-            let py_result: PyObject = pyfunc.call1(py, args)?;
+            let py_result: PyObject = callable.call1(py, args)?;
             if let Ok(boolval) = py_result.extract::<bool>(py) {
                 if boolval {
                     println!("func({}, {}) is true", i, j);
                 }
             } else {
-                return Err(pyo3::exceptions::ValueError::py_err(
+                return Err(pyo3::exceptions::PyValueError::new_err(
                     "func({}, {}) didn't return a bool!",
                 ));
             }

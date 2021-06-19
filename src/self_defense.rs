@@ -1,8 +1,10 @@
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
-use pyo3::PyObject;
 
 /// Instructor of defense against fresh fruit
+///
+/// Note that `#[pyclass] can only be used with C-style structs`, so even though
+/// this example has no fields, we can't make this a unit struct.
 #[pyclass]
 pub struct Instructor {}
 
@@ -23,6 +25,8 @@ impl Instructor {
         Instructor {}
     }
 
+    /// Defends against an attack by a student
+    #[text_signature = "(self, student)"]
     pub fn defend(&self, student_obj: &PyAny) -> PyResult<()> {
         // See https://github.com/PyO3/pyo3/blob/master/guide/src/class.md for info on this
         let student: PyRef<Student> = student_obj.extract()?;
@@ -44,6 +48,7 @@ impl Instructor {
     }
 }
 
+/// Represents a student and their weapon of choice
 #[pyclass]
 pub struct Student {
     // Ideally, we'd use a Rust enum, but I'm not sure how we can expose an enum properly to Python
@@ -73,7 +78,7 @@ impl Student {
         Student { weapon }
     }
 
-    /// Checks whether the type of cheese specified is available.
+    /// Attack with fresh fruit
     fn attack(&self) {
         println!("Student attacks with a {}", self.weapon);
     }
@@ -85,7 +90,6 @@ mod test {
     #[test]
     fn test_weapon_name() {
         let mr_apricot = Student::new("banana".to_string());
-
         assert_eq!(mr_apricot.weapon, "banana".to_string());
     }
 
