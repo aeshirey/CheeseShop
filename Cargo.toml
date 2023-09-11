@@ -9,8 +9,9 @@ name = "CheeseShop"
 crate-type = ["cdylib"]
 
 
+
 [dependencies.pyo3]
-version = "0.13.2"
-#features = ["extension-module"]
-extension-module = ["extension-module"]
-default = ["extension-module"]
+version = "0.19.2"
+#features = ["macros"]
+#features = ["macros", "extension-module"]
+features = ["extension-module"]

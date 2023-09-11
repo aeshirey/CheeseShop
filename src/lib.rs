@@ -1,13 +1,11 @@
-use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyTuple};
-use pyo3::wrap_pyfunction;
-use pyo3::Python;
+#![allow(non_snake_case)]
+use pyo3::{
+    prelude::*,
+    types::{PyDict, PyTuple},
+};
 
 mod cheese_shop;
-use cheese_shop::CheeseShop;
-
 mod self_defense;
-use self_defense::{Instructor, Student};
 
 /*
 A few comments before we get started:
@@ -27,7 +25,7 @@ Some TODO items:
 /// Does something completely different by returning a Python `List[str]`.
 fn do_something() -> Vec<&'static str> {
     "And now for something completely different"
-        .split(" ")
+        .split(' ')
         .collect()
 }
 
@@ -63,8 +61,8 @@ fn movies() -> Vec<(String, u16)> {
 /// >>> are_we_arguing(False)
 /// >>> are_we_arguing(True)
 // Sets the default value of an argument if it's not passed from Python.
-#[pyfunction(having_an_argument = false)]
-#[text_signature = "(having_an_argument = False)"]
+#[pyfunction]
+#[pyo3(signature = (having_an_argument = false))]
 fn are_we_arguing(_py: Python, having_an_argument: bool) -> &'static str {
     if having_an_argument {
         "If I argue with you, I must take up a contrary position!"
@@ -80,8 +78,8 @@ fn are_we_arguing(_py: Python, having_an_argument: bool) -> &'static str {
 /// >>> ive_told_you_once("No you haven't.")
 /// >>> ive_told_you_once("When?")
 // Note that the default string value needs to contain escaped quotes and is itself enquoted.
-#[pyfunction(client_says = "\"No you haven't.\"")]
-#[text_signature = "(client_says = \"No you haven't.\")"]
+#[pyfunction]
+#[pyo3(signature = (client_says = "No you haven't."))]
 fn ive_told_you_once(_py: Python, client_says: &str) -> PyResult<&'static str> {
     match client_says {
         "No you haven't." => Ok("Yes I have."),
@@ -97,10 +95,10 @@ fn ive_told_you_once(_py: Python, client_says: &str) -> PyResult<&'static str> {
 /// Accepts Python **kwargs.
 ///
 /// >>> knights_at_camelot(Bedevere='Wise', Lancelot='Brave', Galahad='Pure', Robin='Not Quite so Brave as Sir Lancelot')
-#[pyfunction(kwds = "**")]
-#[text_signature = "(**kwargs)"]
-fn knights_at_camelot(_py: Python, kwds: Option<&PyDict>) -> PyResult<()> {
-    if let Some(dict) = kwds {
+#[pyfunction]
+#[pyo3(signature = (**kwargs))]
+fn knights_at_camelot(_py: Python, kwargs: Option<&PyDict>) -> PyResult<()> {
+    if let Some(dict) = kwargs {
         println!("King Arthur's has the following knights at his round table:");
         // key and value are both &PyAny
         for (key, value) in dict.iter() {
@@ -119,15 +117,15 @@ fn knights_at_camelot(_py: Python, kwds: Option<&PyDict>) -> PyResult<()> {
 /// >>> things_that_float("Bread", "Apples", "Very small rocks", "Cider")
 /// >>> things_that_float("Great gravy", "Churches", "Lead")
 /// >>> things_that_float("A duck")
-#[pyfunction(args = "*")]
-#[text_signature = "(**kwargs)"]
-pub fn things_that_float(_py: Python, args: Option<&PyTuple>) -> PyResult<()> {
+#[pyfunction]
+#[pyo3(signature = (*args))]
+pub fn things_that_float(_py: Python, args: &PyTuple) -> PyResult<()> {
     println!("What also floats in water?");
-    if let Some(args) = args {
-        for arg in args.iter() {
-            // Each arg is a &PyAny, which you can .extract as you want. For this example, I'm
-            // assuming everything is a string.
-            println!("   \"{}!\"", arg.extract::<String>().unwrap());
+    for arg in args.iter() {
+        // Each arg is a &PyAny, which you can .extract() as any type and check for sccess.
+        // Here, I handle strings and ignore others
+        if let Ok(s) = arg.extract::<&str>() {
+            println!("   \"{s}!\"");
         }
     }
 
@@ -140,7 +138,7 @@ pub fn things_that_float(_py: Python, args: Option<&PyTuple>) -> PyResult<()> {
 /// >>> make_the_call(lambda: 42)
 /// >>> make_the_call(lambda: 1.618)
 #[pyfunction]
-#[text_signature = "(pyfunc)"]
+#[pyo3(signature = (pyfunc))]
 fn make_the_call(py: Python, pyfunc: PyObject) -> PyResult<()> {
     let py_result: PyObject = pyfunc.call0(py)?;
 
@@ -163,7 +161,7 @@ fn make_the_call(py: Python, pyfunc: PyObject) -> PyResult<()> {
 /// `callable` for all (i,j) pairs for i from 1..max_i and j from i..max_j. If your function
 /// returns true, Rust will write a line.
 #[pyfunction]
-#[text_signature = "(callable, max_i, max_j)"]
+#[pyo3(signature = (callable, max_i, max_j))]
 fn call_with_args(py: Python, callable: PyObject, max_i: u8, max_j: u8) -> PyResult<()> {
     for i in 1..max_i {
         for j in i..max_j {
@@ -187,7 +185,7 @@ fn call_with_args(py: Python, callable: PyObject, max_i: u8, max_j: u8) -> PyRes
 /// Pass a function to Rust and it will call you back with the tuple ("bicycle", "repair", "man").
 /// Whatever you return will be printed to the console.
 #[pyfunction]
-#[text_signature = "(callable)"]
+#[pyo3(signature = (pyfunc))]
 fn call_with_tuple_arg(py: Python, pyfunc: PyObject) -> PyResult<()> {
     let arg_tuple = ("bicycle", "repair", "man");
     let py_result: PyObject = pyfunc.call1(py, (arg_tuple,))?;
@@ -204,7 +202,7 @@ fn call_with_tuple_arg(py: Python, pyfunc: PyObject) -> PyResult<()> {
 #[allow(non_snake_case)]
 fn CheeseShop(_py: Python, m: &PyModule) -> PyResult<()> {
     // The CheeseShop type (from cheese_shop.rs) is exported here.
-    m.add_class::<CheeseShop>()?;
+    m.add_class::<cheese_shop::CheeseShop>()?;
 
     // Module-level functions are added here. They must have the #[pyfunction] attribute.
     m.add_wrapped(wrap_pyfunction!(do_something))?;
@@ -220,7 +218,7 @@ fn CheeseShop(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(call_with_tuple_arg))?;
 
     // For passing objects back and forth
-    m.add_class::<Instructor>()?;
-    m.add_class::<Student>()?;
+    m.add_class::<self_defense::Instructor>()?;
+    m.add_class::<self_defense::Student>()?;
     Ok(())
 }

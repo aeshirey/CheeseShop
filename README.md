@@ -1,5 +1,5 @@
 # CheeseShop
-Examples of using [PyO3 Rust bindings for Python](https://github.com/pyo3/pyo3) with little to no silliness.
+Examples of using [PyO3 Rust bindings for Python](https://github.com/pyo3/pyo3) with little to no silliness. For detailed documentation, see the [PyO3 user guide](https://pyo3.rs/v0.19.2). This project uses the current version (0.19.2) as of 2023-09-11.
 
 ## Getting Started
 * Create your library project: `$ cargo new --lib CheeseShop`
@@ -11,18 +11,27 @@ Update your `Cargo.toml`:
 name = "CheeseShop"
 crate-type = ["cdylib"]
 
-[dependencies.pyo3]
-version = "0.13.2"
-features = ["extension-module"]
+[dependencies]
+pyo3 = { version = "0.19.2", features = ["extension-module"] }
 ```
 
-Here, `name` sets the name of the output library. In Linux, this creates a `libCheeseShop.so` file. This must be renamed to `CheeseShop.so`, which lets you `import CheeseShop` in Python.
+Here, `name` sets the name of the output library. In Linux, this compiles to `libCheeseShop.so`. This must be renamed to `CheeseShop.so`, which lets you `import CheeseShop` in Python.
+
+## Running Code in This Project
+There's an [`example_usage.py`](example_usage.py) file that invokes the Rust methods. For example:
+
+```python
+from CheeseShop import *
+>>> do_something()
+['And', 'now', 'for', 'something', 'completely', 'different']
+>>> movies()
+[('Monty Python and the Holy Grail', 1975), ('Life of Brian', 1979), ('The Meaning of Life', 1983)]
+```
 
 ## Writing Rust functions
 
 ```rust
 use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
 
 #[pyfunction]
 /// Does something completely different by returning a Python `List[str]`.
@@ -49,13 +58,20 @@ fn CheeseShop(_py: Python, m: &PyModule) -> PyResult<()> {
 }
 ```
 
-## Running
-There's an [`example_usage.py`](example_usage.py) file that invokes the Rust methods. For example:
+## Attributes
+PyO3 provides numerous [attributes](https://doc.rust-lang.org/reference/attributes.html) for conveniently mapping your Rust code to comparable Python functionality:
 
-```
-from CheeseShop import *
->>> do_something()
-['And', 'now', 'for', 'something', 'completely', 'different']
->>> movies()
-[('Monty Python and the Holy Grail', 1975), ('Life of Brian', 1979), ('The Meaning of Life', 1983)]
-```
+### Python Classes
+* `#[pyclass]` marks a struct (or fieldless enum) as a Python class
+* `#[pymethods]` marks _one_ `impl` block for that struct (or enum). Functions/methods are generally accessible in Python, and they don't need `pub` modifiers on them.
+* `#[new]` makes a Rust function (within the `pymethods` block) into the `__init__` constructor for a class
+* Magic (or sometimes called 'dunder') methods are declared like other methods. Your implementation will need the approprate number and type of arguments and return values; for example:
+    * `fn __setattr__(&self) {}` will fail to compile with the error, _Expected 2 arguments, got 0_ because [`setattr`](https://docs.python.org/3/library/functions.html#setattr) requires two inputs.
+    * `fn __setattr__(&self, name: i32, value: i32) {}` will fail at runtime with the error, _argument 'name': 'str' object cannot be interpreted as an integer_ because the `name` argument is of an incorrect type
+    * `fn __setattr__(&self, name: i32, value: i32) -> bool {}` will fail to compile because this magic method is expected to have no return value (or, technically, [`unit`](https://doc.rust-lang.org/std/primitive.unit.html)).
+* `#[staticmethod]` marks an associated Rust function as being a Python static method
+
+### Signatures
+By default, methods and functions have basic [help documentation](https://docs.python.org/3/library/functions.html#help) that includes argument names. You can use `#[pyo3(text_signature = "...")]` to override this auto-generated text; the provided string is arbitrary and is simply appended to the end of the function name; it is expected that your `text_signature` encloses argumens in parentheses; eg, `(name: str, age: int = None)`.
+
+To supply your own default values, to handle `*args` and `**kwargs`, and more, use `#[pyo3(signature = (...))]`. The argument names in this attribute _must_ match the names used in the Rust function it annotates, and the default values (if provided) must be valid Rust code that corresponds to theinput type.
