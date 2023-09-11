@@ -30,6 +30,8 @@ from CheeseShop import *
 
 ## Writing Rust functions
 
+Some simple examples of Rust functions that become available in Python:
+
 ```rust
 use pyo3::prelude::*;
 
@@ -56,6 +58,15 @@ fn CheeseShop(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(do_something))?;
     m.add_wrapped(wrap_pyfunction!(movies))?;
 }
+```
+
+The `///` Rust [doc comments](https://doc.rust-lang.org/reference/comments.html#doc-comments) turn into Python docstrings, so calling `help(movies)` for the above function will show you this in the Python REPL:
+
+```text
+Help on built-in function movies:
+
+movies()
+    A module-level function that simply returns tuples of movies and their release year.
 ```
 
 ## Attributes

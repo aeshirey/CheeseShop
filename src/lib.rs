@@ -8,16 +8,10 @@ mod cheese_shop;
 mod self_defense;
 
 /*
-A few comments before we get started:
- * Use #[text_signature(foo, bar)] to present the function signature to Python.
-   It must go after #[pyfunction], and there are limitations on characters that can go in.
- * /// comments will show up in the Python help() for methods.
- *
-
 Some TODO items:
- * Add some details on downcast_ref (soon to be downcast)
+ * Add some details on downcast
  * Understand how memory is handled when passing objects back and forth.
- * Document all of the 'dunder' methods currently available, create a good example of them.
+ * Document all of the 'dunder' methods currently available, create examples of them.
  * Figure out how to wrap_pyfunction!() a function defined in another module. (This currently fails.)
  */
 
@@ -122,7 +116,7 @@ fn knights_at_camelot(_py: Python, kwargs: Option<&PyDict>) -> PyResult<()> {
 pub fn things_that_float(_py: Python, args: &PyTuple) -> PyResult<()> {
     println!("What also floats in water?");
     for arg in args.iter() {
-        // Each arg is a &PyAny, which you can .extract() as any type and check for sccess.
+        // Each arg is a &PyAny, which you can .extract() as any type and check for success.
         // Here, I handle strings and ignore others
         if let Ok(s) = arg.extract::<&str>() {
             println!("   \"{s}!\"");
