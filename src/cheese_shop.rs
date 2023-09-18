@@ -86,19 +86,12 @@ impl CheeseShop {
     /// ```
     ///
     /// References the [Lifeboat sketch](https://en.wikipedia.org/wiki/Lifeboat_sketch)
-    ///
-    /// # Issues
-    /// NB: It appears that in PyO3 0.19.2, a class with `__getattr__` prevents a user from
-    /// getting tab-completion of or seeing functions, methods, and properties within the REPL.
-    /// You can still access/call them, but visibility is hindered. See [PyO3 Issue 3447](https://github.com/PyO3/pyo3/issues/3447).
     pub fn __getattr__(&self, name: &str) -> PyResult<&'static str> {
         match name {
             "cannibalism" => Ok("Relatively under control"),
-            _ => Err(pyo3::exceptions::PyValueError::new_err(
+            _ => Err(pyo3::exceptions::PyAttributeError::new_err(
                 "Attribute not found. Move along.",
             )),
         }
     }
-    /*
-     */
 }
