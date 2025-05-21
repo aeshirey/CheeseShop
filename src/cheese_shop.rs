@@ -1,7 +1,7 @@
-use pyo3::{prelude::*, types::PyAny};
+use pyo3::prelude::*;
 
-#[pyclass]
 /// Sells cheesy comestibles.
+#[pyclass]
 pub struct CheeseShop {
     stock: u32,
 }
@@ -19,8 +19,6 @@ impl CheeseShop {
     }
 
     /// Checks whether the type of cheese specified is available.
-    //#[pyo3(signature = (name = None), text_signature = "(bleh) -> foo")]
-    //#[pyo3(signature = (name = None))]
     #[pyo3(text_signature = "(name: str) -> bool")]
     pub fn has_cheese(&self, name: Option<&str>) -> bool {
         match name {
@@ -56,13 +54,11 @@ impl CheeseShop {
         Ok(45)
     }
 
-    // Python 'dunder methods'. See PyO3's PyObjectProtocol trait here
-    // https://github.com/PyO3/pyo3/blob/fee755adbea01504d12cd858e2705608c10163a4/src/class/basic.rs
-    pub fn __repr__(&self) -> PyResult<String> {
+    fn __repr__(&self) -> PyResult<String> {
         Ok(format!("CheeseShop(stock={})", self.stock))
     }
 
-    pub fn __str__(&self) -> PyResult<String> {
+    fn __str__(&self) -> PyResult<String> {
         self.__repr__()
     }
 
@@ -86,7 +82,7 @@ impl CheeseShop {
     /// ```
     ///
     /// References the [Lifeboat sketch](https://en.wikipedia.org/wiki/Lifeboat_sketch)
-    pub fn __getattr__(&self, name: &str) -> PyResult<&'static str> {
+    fn __getattr__(&self, name: &str) -> PyResult<&'static str> {
         match name {
             "cannibalism" => Ok("Relatively under control"),
             _ => Err(pyo3::exceptions::PyAttributeError::new_err(

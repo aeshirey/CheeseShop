@@ -2,29 +2,22 @@
 use pyo3::{
     prelude::*,
     types::{PyDict, PyTuple},
+    wrap_pyfunction,
 };
 
 mod cheese_shop;
 mod self_defense;
 
-/*
-Some TODO items:
- * Add some details on downcast
- * Understand how memory is handled when passing objects back and forth.
- * Document all of the 'dunder' methods currently available, create examples of them.
- * Figure out how to wrap_pyfunction!() a function defined in another module. (This currently fails.)
- */
-
-#[pyfunction]
 /// Does something completely different by returning a Python `List[str]`.
+#[pyfunction]
 fn do_something() -> Vec<&'static str> {
     "And now for something completely different"
         .split(' ')
         .collect()
 }
 
-#[pyfunction]
 /// A module-level function that simply returns tuples of movies and their release year.
+#[pyfunction]
 fn movies() -> Vec<(String, u16)> {
     vec![
         ("Monty Python and the Holy Grail".to_string(), 1975),
@@ -33,21 +26,6 @@ fn movies() -> Vec<(String, u16)> {
     ]
 }
 
-/* ----------------------------------------------------------------------------------------------
-                          "I'd like to have an argument, please."
----------------------------------------------------------------------------------------------- */
-// The following functions are related to passing arguments to Rust -- *args, **kwargs, default
-// values, etc.
-//
-// Note that these really should go into another file, arguments.rs. However, I found that doing
-// that gave the following compiler error (nightly-2020-03-12-x86_64-unknown-linux-gnu):
-//
-//    |     m.add_wrapped(wrap_pyfunction!(py_defaultvalue))?;
-//    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
-//
-// So for now, I'm mashing all these functions into this file.
-//
-
 /// Accepts an optional bool argument. Current implementation throws a TypeError if a non-bool is
 /// passed.
 ///
@@ -55,6 +33,7 @@ fn movies() -> Vec<(String, u16)> {
 /// >>> are_we_arguing(False)
 /// >>> are_we_arguing(True)
 // Sets the default value of an argument if it's not passed from Python.
+// This function also _can_ get the Python GIL marker, but it doesn't use it here.
 #[pyfunction]
 #[pyo3(signature = (having_an_argument = false))]
 fn are_we_arguing(_py: Python, having_an_argument: bool) -> &'static str {
@@ -73,17 +52,20 @@ fn are_we_arguing(_py: Python, having_an_argument: bool) -> &'static str {
 /// >>> ive_told_you_once("When?")
 // Note that the default string value needs to contain escaped quotes and is itself enquoted.
 #[pyfunction]
-#[pyo3(signature = (client_says = "No you haven't."))]
-fn ive_told_you_once(_py: Python, client_says: &str) -> PyResult<&'static str> {
-    match client_says {
-        "No you haven't." => Ok("Yes I have."),
-        "You didn't!" => Ok("I did!"),
-        "When?" => Ok("Just now."),
-        "You most certainly did not!" => Ok("I most definitely told you!"),
-        _ => Err(pyo3::exceptions::PyValueError::new_err(
-            "I'm not allowed to argue any more.",
-        )),
-    }
+#[pyo3(signature = (client_says = String::from("No you haven't.")))]
+fn ive_told_you_once(client_says: Option<String>) -> PyResult<String> {
+    let response = match client_says.as_deref().unwrap_or("No you haven't.") {
+        "No you haven't." => "Yes I have.",
+        "You didn't!" => "I did!",
+        "When?" => "Just now.",
+        "You most certainly did not!" => "I most definitely told you!",
+        _ => {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "I'm not allowed to argue any more.",
+            ))
+        }
+    };
+    Ok(response.to_string())
 }
 
 /// Accepts Python **kwargs.
@@ -113,7 +95,7 @@ fn knights_at_camelot(_py: Python, kwargs: Option<&PyDict>) -> PyResult<()> {
 /// >>> things_that_float("A duck")
 #[pyfunction]
 #[pyo3(signature = (*args))]
-pub fn things_that_float(_py: Python, args: &PyTuple) -> PyResult<()> {
+fn things_that_float(_py: Python, args: &PyTuple) -> PyResult<()> {
     println!("What also floats in water?");
     for arg in args.iter() {
         // Each arg is a &PyAny, which you can .extract() as any type and check for success.
@@ -191,28 +173,26 @@ fn call_with_tuple_arg(py: Python, pyfunc: PyObject) -> PyResult<()> {
     Ok(())
 }
 
-/// This module is a python module implemented in Rust.
+/// A Python module implemented in Rust, inspired by Monty Python's Flying Circus
 #[pymodule]
-#[allow(non_snake_case)]
 fn CheeseShop(_py: Python, m: &PyModule) -> PyResult<()> {
     // The CheeseShop type (from cheese_shop.rs) is exported here.
     m.add_class::<cheese_shop::CheeseShop>()?;
+    m.add_class::<self_defense::Student>()?;
+    m.add_class::<self_defense::Instructor>()?;
 
-    // Module-level functions are added here. They must have the #[pyfunction] attribute.
+    // Add functions
+    // We can either add_wrapped:
     m.add_wrapped(wrap_pyfunction!(do_something))?;
     m.add_wrapped(wrap_pyfunction!(movies))?;
+    // or add_function:
+    m.add_function(wrap_pyfunction!(are_we_arguing, m)?)?;
+    m.add_function(wrap_pyfunction!(ive_told_you_once, m)?)?;
+    m.add_function(wrap_pyfunction!(knights_at_camelot, m)?)?;
+    m.add_function(wrap_pyfunction!(things_that_float, m)?)?;
+    m.add_function(wrap_pyfunction!(make_the_call, m)?)?;
+    m.add_function(wrap_pyfunction!(call_with_args, m)?)?;
+    m.add_function(wrap_pyfunction!(call_with_tuple_arg, m)?)?;
 
-    // For having an argument.
-    m.add_wrapped(wrap_pyfunction!(are_we_arguing))?;
-    m.add_wrapped(wrap_pyfunction!(ive_told_you_once))?;
-    m.add_wrapped(wrap_pyfunction!(knights_at_camelot))?;
-    m.add_wrapped(wrap_pyfunction!(things_that_float))?;
-    m.add_wrapped(wrap_pyfunction!(make_the_call))?;
-    m.add_wrapped(wrap_pyfunction!(call_with_args))?;
-    m.add_wrapped(wrap_pyfunction!(call_with_tuple_arg))?;
-
-    // For passing objects back and forth
-    m.add_class::<self_defense::Instructor>()?;
-    m.add_class::<self_defense::Student>()?;
     Ok(())
 }
