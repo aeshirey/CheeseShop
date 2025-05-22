@@ -34,8 +34,8 @@ assert str(cs) == 'CheeseShop(stock=0)'
 cs.camelot = "silly" # prints 'Setting self.camelot = "silly"'
 try:
    foo = cs.does_not_exist
-except ValueError as e:
-    print(f'Got expected ValueError: {e}') # "Attribute not found. Move along."
+except AttributeError as e:
+    print(f'Got expected AttributeError: {e}') # "Attribute not found. Move along."
 
 # What kinds of chesee do we have?
 assert not cs.has_cheese("cheddar") # prints "We have no cheddar"

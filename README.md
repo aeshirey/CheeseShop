@@ -12,7 +12,7 @@ name = "CheeseShop"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.19.2", features = ["extension-module"] }
+pyo3 = { version = "0.25", features = ["extension-module"] }
 ```
 
 Here, `name` sets the name of the output library. In Linux, this compiles to `libCheeseShop.so`. This must be renamed to `CheeseShop.so`, which lets you `import CheeseShop` in Python.
@@ -54,7 +54,7 @@ fn movies() -> Vec<(String, u16)> {
 }
 
 #[pymodule]
-fn CheeseShop(_py: Python, m: &PyModule) -> PyResult<()> {
+fn CheeseShop(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(do_something))?;
     m.add_wrapped(wrap_pyfunction!(movies))?;
 }

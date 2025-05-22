@@ -19,7 +19,8 @@ impl CheeseShop {
     }
 
     /// Checks whether the type of cheese specified is available.
-    #[pyo3(text_signature = "(name: str) -> bool")]
+    #[pyo3(signature = (name = None))]
+    #[pyo3(text_signature = "(name: str = None) -> bool")]
     pub fn has_cheese(&self, name: Option<&str>) -> bool {
         match name {
             Some(s) => println!("We have no {s}"),
