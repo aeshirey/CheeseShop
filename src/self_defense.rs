@@ -18,7 +18,7 @@ impl Instructor {
 
     /// Defends against an attack by a student
     #[pyo3(signature = (student_obj))]
-    pub fn defend(&self, student_obj: &PyAny) -> PyResult<()> {
+    pub fn defend(&self, student_obj: &Bound<'_, PyAny>) -> PyResult<()> {
         // See https://github.com/PyO3/pyo3/blob/master/guide/src/class.md for info on this
         let student: PyRef<Student> = student_obj.extract()?;
 

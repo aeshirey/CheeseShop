@@ -1,8 +1,9 @@
 #![allow(non_snake_case)]
 use pyo3::{
+    exceptions,
     prelude::*,
-    types::{PyDict, PyTuple},
-    wrap_pyfunction,
+    types::{PyBool, PyDict, PyFloat, PyFunction, PyInt, PyList, PyNone, PySet, PyString, PyTuple},
+    wrap_pyfunction, BoundObject,
 };
 
 mod cheese_shop;
@@ -60,7 +61,7 @@ fn ive_told_you_once(client_says: Option<String>) -> PyResult<String> {
         "When?" => "Just now.",
         "You most certainly did not!" => "I most definitely told you!",
         _ => {
-            return Err(pyo3::exceptions::PyValueError::new_err(
+            return Err(exceptions::PyValueError::new_err(
                 "I'm not allowed to argue any more.",
             ))
         }
@@ -73,7 +74,7 @@ fn ive_told_you_once(client_says: Option<String>) -> PyResult<String> {
 /// >>> knights_at_camelot(Bedevere='Wise', Lancelot='Brave', Galahad='Pure', Robin='Not Quite so Brave as Sir Lancelot')
 #[pyfunction]
 #[pyo3(signature = (**kwargs))]
-fn knights_at_camelot(_py: Python, kwargs: Option<&PyDict>) -> PyResult<()> {
+fn knights_at_camelot(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<()> {
     if let Some(dict) = kwargs {
         println!("King Arthur's has the following knights at his round table:");
         // key and value are both &PyAny
@@ -95,7 +96,7 @@ fn knights_at_camelot(_py: Python, kwargs: Option<&PyDict>) -> PyResult<()> {
 /// >>> things_that_float("A duck")
 #[pyfunction]
 #[pyo3(signature = (*args))]
-fn things_that_float(_py: Python, args: &PyTuple) -> PyResult<()> {
+fn things_that_float(_py: Python<'_>, args: &Bound<'_, PyTuple>) -> PyResult<()> {
     println!("What also floats in water?");
     for arg in args.iter() {
         // Each arg is a &PyAny, which you can .extract() as any type and check for success.
@@ -148,7 +149,7 @@ fn call_with_args(py: Python, callable: PyObject, max_i: u8, max_j: u8) -> PyRes
                     println!("func({}, {}) is true", i, j);
                 }
             } else {
-                return Err(pyo3::exceptions::PyValueError::new_err(
+                return Err(exceptions::PyValueError::new_err(
                     "func({}, {}) didn't return a bool!",
                 ));
             }
@@ -173,9 +174,100 @@ fn call_with_tuple_arg(py: Python, pyfunc: PyObject) -> PyResult<()> {
     Ok(())
 }
 
+/// Given some object, print out its type.
+#[pyfunction]
+#[pyo3(signature = (hiding_behind))]
+fn how_not_to_be_seen(hiding_behind: &Bound<'_, PyAny>) -> PyResult<()> {
+    let r#type = if hiding_behind.extract::<&str>().is_ok() {
+        "string"
+    } else if hiding_behind.extract::<i32>().is_ok() {
+        "integer"
+    } else if hiding_behind.extract::<f32>().is_ok() {
+        "float"
+    } else if hiding_behind.extract::<bool>().is_ok() {
+        "bool"
+    } else if hiding_behind.extract::<Bound<'_, PyList>>().is_ok() {
+        "list"
+    } else if hiding_behind.extract::<Bound<'_, PySet>>().is_ok() {
+        "set"
+    } else if hiding_behind.extract::<Bound<'_, PyDict>>().is_ok() {
+        "dictionary"
+    } else if hiding_behind.extract::<Bound<'_, PyFunction>>().is_ok() {
+        "function"
+    } else if hiding_behind.extract::<Bound<'_, PyModule>>().is_ok() {
+        "module"
+    } else {
+        println!("How not to be seen: {hiding_behind:?}");
+        return Ok(());
+    };
+
+    println!(
+        "Mr. Nesbitt has chosen a very obvious piece of cover behind that {}",
+        r#type
+    );
+
+    Ok(())
+}
+
+/// Attempt to confuse the Python interpreter by asking it to return a value of a specified type.
+#[pyfunction]
+#[pyo3(signature = (result_type))]
+fn confuse(py: Python, result_type: &str) -> PyResult<Py<PyAny>> {
+    let result_type = result_type.to_lowercase();
+    let r = match result_type.as_ref() {
+        "int" => PyInt::new(py, 123u32).into(),
+        "float" => PyFloat::new(py, 6.18).into(),
+        "str" => PyString::new(py, "It's").into(),
+        "bool" => PyBool::new(py, true).into_bound().into(),
+        "none" => PyNone::get(py).into_bound().into(),
+        "list" => {
+            let list = PyList::empty(py);
+            list.append("It's")?;
+            list.append(6.18)?;
+            list.append(true)?;
+            list.append(PyNone::get(py))?;
+            list.into_any().into()
+        }
+        "tuple" => {
+            let items: [Py<PyAny>; 5] = [
+                PyInt::new(py, 123u32).into(),
+                PyFloat::new(py, 6.18).into(),
+                PyString::new(py, "It's").into(),
+                PyBool::new(py, true).into_bound().into(),
+                PyNone::get(py).into_bound().into(),
+            ];
+            PyTuple::new(py, items)?.into_bound().into()
+        }
+        "dict" => {
+            let dict = PyDict::new(py);
+            dict.set_item("int", 123u32)?;
+            dict.set_item("float", 6.18)?;
+            dict.set_item("str", "It's")?;
+            dict.set_item("bool", true)?;
+            dict.set_item("none", PyNone::get(py))?;
+            dict.into_any().into()
+        }
+        "set" => {
+            let set = PySet::new(py, [1, 2, 3])?;
+            set.add(4)?;
+            set.add("It's")?;
+            set.add(true)?;
+            set.into_any().into()
+        }
+        // TODO: module, function?
+        rt => {
+            return Err(exceptions::PyValueError::new_err(format!(
+                "Meow. Not sure what to do with {rt}"
+            )))
+        }
+    };
+
+    Ok(r)
+}
+
 /// A Python module implemented in Rust, inspired by Monty Python's Flying Circus
 #[pymodule]
-fn CheeseShop(_py: Python, m: &PyModule) -> PyResult<()> {
+fn CheeseShop(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // The CheeseShop type (from cheese_shop.rs) is exported here.
     m.add_class::<cheese_shop::CheeseShop>()?;
     m.add_class::<self_defense::Student>()?;
@@ -193,6 +285,8 @@ fn CheeseShop(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(make_the_call, m)?)?;
     m.add_function(wrap_pyfunction!(call_with_args, m)?)?;
     m.add_function(wrap_pyfunction!(call_with_tuple_arg, m)?)?;
+    m.add_function(wrap_pyfunction!(how_not_to_be_seen, m)?)?;
 
+    m.add_function(wrap_pyfunction!(confuse, m)?)?;
     Ok(())
 }

@@ -64,7 +64,7 @@ impl CheeseShop {
 
     /// cs = CheeseShop()
     /// assert cs.its == "Monty Python's flying Circus"
-    pub fn __setattr__(&mut self, name: &str, value: &PyAny) -> PyResult<()> {
+    pub fn __setattr__(&mut self, name: &str, value: &Bound<'_, PyAny>) -> PyResult<()> {
         let strval: Result<&str, PyErr> = value.extract();
         if let Ok(strval) = strval {
             println!("Setting self.{name} : str = \"{strval}\"");
