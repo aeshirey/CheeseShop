@@ -1,5 +1,5 @@
 # CheeseShop
-Examples of using [PyO3 Rust bindings for Python](https://github.com/pyo3/pyo3) with little to no silliness. For detailed documentation, see the [PyO3 user guide](https://pyo3.rs/v0.19.2). This project uses the current version (0.19.2) as of 2023-09-11.
+Examples of using [PyO3 Rust bindings for Python](https://github.com/pyo3/pyo3) with little to no silliness. For detailed documentation, see the [PyO3 user guide](https://pyo3.rs/v0.19.2). This project uses the current version (0.25) as of 2025-05-22.
 
 ## Getting Started
 * Create your library project: `$ cargo new --lib CheeseShop`
