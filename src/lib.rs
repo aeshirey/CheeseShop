@@ -254,6 +254,21 @@ fn confuse(py: Python, result_type: &str) -> PyResult<Py<PyAny>> {
             set.add(true)?;
             set.into_any().into()
         }
+        "cheese_shop" => {
+            // We can return a CheeseShop type, as it is a valid Python type.
+            let cs = cheese_shop::CheeseShop::new(None);
+            let b = Bound::new(py, cs)?;
+            b.into_any().into()
+        }
+        "bazouki" => {
+            // But we can't return a Bazouki type directly, as it is not a valid Python type (it doesn't have the #[pyclass] attribute).
+            return Err(exceptions::PyValueError::new_err(
+                "Bazouki is not a valid type.",
+            ));
+            //let b = cheese_shop::Bazouki;
+            //let b = Bound::new(py, b)?;
+            //b.into_any().into()
+        }
         // TODO: module, function?
         rt => {
             return Err(exceptions::PyValueError::new_err(format!(

@@ -18,6 +18,17 @@ impl CheeseShop {
         CheeseShop { stock: 0 }
     }
 
+    #[getter]
+    fn stock(&self) -> u32 {
+        self.stock
+    }
+
+    #[setter]
+    fn set_stock(&mut self, stock: u32) {
+        println!("Setting stock to {stock}");
+        self.stock = stock;
+    }
+
     /// Checks whether the type of cheese specified is available.
     #[pyo3(signature = (name = None))]
     #[pyo3(text_signature = "(name: str = None) -> bool")]
@@ -31,7 +42,7 @@ impl CheeseShop {
 
     /// Handles all responses to clients' requests as to the whereabouts of cheese.
     /// Guaranteed to not raise ValueError, as this cheese shop is the finest in the district.
-    #[pyo3(signature = (cheese_type), text_signature = "whoa, that's weird")]
+    #[pyo3(signature = (cheese_type))]
     pub fn respond_to_client(&self, cheese_type: &str) -> PyResult<&str> {
         let cheese_lower: String = cheese_type.to_lowercase();
         let response = match &cheese_lower[..] {
@@ -92,3 +103,7 @@ impl CheeseShop {
         }
     }
 }
+
+/// This struct isn't exposed as a pyclass, so we can't return it.
+#[allow(dead_code)]
+pub(crate) struct Bazouki;
